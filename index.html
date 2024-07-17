@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Snake Game</title>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multiplayer Snake Game</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io('YOUR_SERVER_URL');
+
+        const canvas = document.getElementById('gameCanvas');
+        const context = canvas.getContext('2d');
+        const scale = 10;
+        const rows = canvas.height / scale;
+        const columns = canvas.width / scale;
+
+        let playerId;
+        let players = {};
+
+        document.addEventListener('keydown', (event) => {
+            socket.emit('keydown', { playerId, key: event.key });
+        });
+
+        socket.on('init', (data) => {
+            playerId = data.playerId;
+            players = data.players;
+        });
+
+        socket.on('state', (data) => {
+            players = data.players;
+            draw();
+        });
+
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            for (let id in players) {
+                const snake = players[id].snake;
+                context.fillStyle = id === playerId ? 'green' : 'red';
+                snake.forEach(part => {
+                    context.fillRect(part.x * scale, part.y * scale, scale, scale);
+                });
+            }
+        }
+
+        function gameLoop() {
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
